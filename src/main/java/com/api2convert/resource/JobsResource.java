@@ -48,7 +48,7 @@ public final class JobsResource {
     }
 
     public Job get(String jobId) {
-        return Job.fromMap(Data.object(transport.request("GET", "/jobs/" + jobId)));
+        return Job.fromMap(Data.object(transport.request("GET", "/jobs/" + Transport.encodeSegment(jobId))));
     }
 
     /** List the current key's jobs (paginated, 50 per page). */
@@ -67,7 +67,7 @@ public final class JobsResource {
 
     /** Modify a job. The common case — starting a staged job — has the dedicated {@link #start}. */
     public Job update(String jobId, Map<String, Object> payload) {
-        return Job.fromMap(Data.object(transport.request("PATCH", "/jobs/" + jobId, payload)));
+        return Job.fromMap(Data.object(transport.request("PATCH", "/jobs/" + Transport.encodeSegment(jobId), payload)));
     }
 
     /** Start processing a staged job ({@code process -> true}). */
@@ -77,7 +77,7 @@ public final class JobsResource {
 
     /** Cancel a job (whether staged or processing). */
     public void cancel(String jobId) {
-        transport.request("DELETE", "/jobs/" + jobId);
+        transport.request("DELETE", "/jobs/" + Transport.encodeSegment(jobId));
     }
 
     /**
@@ -85,7 +85,8 @@ public final class JobsResource {
      * {@code addInput(id, Map.of("type", "remote", "source", "https://..."))}.
      */
     public InputFile addInput(String jobId, Map<String, Object> input) {
-        return InputFile.fromMap(Data.object(transport.request("POST", "/jobs/" + jobId + "/input", input)));
+        return InputFile.fromMap(Data.object(
+                transport.request("POST", "/jobs/" + Transport.encodeSegment(jobId) + "/input", input)));
     }
 
     /**
@@ -150,6 +151,7 @@ public final class JobsResource {
 
     /** Outputs produced by the job (use {@link #get} first, or {@link #await}). */
     public List<OutputFile> outputs(String jobId) {
-        return Data.mapObjects(transport.request("GET", "/jobs/" + jobId + "/output"), OutputFile::fromMap);
+        return Data.mapObjects(
+                transport.request("GET", "/jobs/" + Transport.encodeSegment(jobId) + "/output"), OutputFile::fromMap);
     }
 }

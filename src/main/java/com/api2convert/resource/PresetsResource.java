@@ -42,14 +42,15 @@ public final class PresetsResource {
     }
 
     public Preset get(String presetId) {
-        return Preset.fromMap(Data.object(transport.request("GET", "/presets/" + presetId)));
+        return Preset.fromMap(Data.object(transport.request("GET", "/presets/" + Transport.encodeSegment(presetId))));
     }
 
     public Preset update(String presetId, Map<String, Object> payload) {
-        return Preset.fromMap(Data.object(transport.request("PATCH", "/presets/" + presetId, payload)));
+        return Preset.fromMap(Data.object(
+                transport.request("PATCH", "/presets/" + Transport.encodeSegment(presetId), payload)));
     }
 
     public void delete(String presetId) {
-        transport.request("DELETE", "/presets/" + presetId);
+        transport.request("DELETE", "/presets/" + Transport.encodeSegment(presetId));
     }
 }

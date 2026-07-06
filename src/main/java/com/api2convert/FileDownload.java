@@ -65,6 +65,10 @@ public final class FileDownload {
                 out.write(buffer, 0, read);
             }
         } catch (IOException e) {
+            // A read/write failure mid-stream leaves a truncated file at the target. Callers that
+            // retry (or hand the path to another process) must never see a partial download that
+            // masquerades as complete, so remove it before surfacing the error.
+            deleteQuietly(target);
             throw new Api2ConvertException("Could not write file: " + target + ": " + e.getMessage(), e);
         }
 
@@ -125,6 +129,15 @@ public final class FileDownload {
     private Map<String, String> headers(String downloadPassword) {
         String password = downloadPassword != null ? downloadPassword : this.downloadPassword;
         return password != null ? Map.of("X-Oc-Download-Password", password) : Map.of();
+    }
+
+    /** Best-effort removal of a partially-written target after a download failure. */
+    private static void deleteQuietly(Path target) {
+        try {
+            Files.deleteIfExists(target);
+        } catch (IOException ignored) {
+            // best effort; the write already failed and we are propagating that error
+        }
     }
 
     private static String firstNonNull(String a, String b, String c) {

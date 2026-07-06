@@ -1,5 +1,6 @@
 package com.api2convert;
 
+import com.api2convert.exception.ConfigurationException;
 import com.api2convert.http.Config;
 import com.api2convert.http.HttpSender;
 import com.api2convert.http.JdkHttpSender;
@@ -79,7 +80,7 @@ public final class Api2Convert implements AutoCloseable {
     private static String resolveKey(String apiKey) {
         String key = apiKey != null && !apiKey.isEmpty() ? apiKey : System.getenv("API2CONVERT_API_KEY");
         if (key == null || key.isEmpty()) {
-            throw new IllegalArgumentException(
+            throw new ConfigurationException(
                     "No API key provided. Pass it to the constructor or set the "
                             + "API2CONVERT_API_KEY environment variable.");
         }

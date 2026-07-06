@@ -239,7 +239,29 @@ public final class Transport {
         Request request = Request.of("GET", uri, new LinkedHashMap<>(headers), null, !carriesSecret);
         Response response = send(request);
         ensureSuccessful(response);
+
+        // ensureSuccessful() only rejects status >= 400, so a 3xx slips through. It can only reach
+        // here on the no-follow path (a request carrying a secret): the redirect was deliberately not
+        // followed, so the body is the storage redirect page — not the file. Writing it to disk would
+        // silently corrupt the download; surface it as a network error instead.
+        int status = response.status();
+        if (status >= 300 && status < 400) {
+            closeQuietly(response.body());
+            throw new NetworkException("The download did not resolve: a redirect was not followed "
+                    + "because the request carried a secret header.");
+        }
         return response.body();
+    }
+
+    /**
+     * Percent-encode a single dynamic path segment. IDs, dates and filters are interpolated into the
+     * request path by the resources; a value containing a {@code "/"}, {@code "?"} or {@code "#"}
+     * would otherwise alter the path structure — traversing to another resource or starting the
+     * query/fragment. The fixed {@code "/"} separators between segments are added by the caller and
+     * are never routed through here. Uses {@code %20} for spaces (a path segment, not a form field).
+     */
+    public static String encodeSegment(String value) {
+        return URLEncoder.encode(value, StandardCharsets.UTF_8).replace("+", "%20");
     }
 
     public String url(String path, Map<String, String> query) {

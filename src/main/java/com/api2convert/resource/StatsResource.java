@@ -18,7 +18,8 @@ public final class StatsResource {
 
     /** @param day format {@code yyyy-mm-dd} */
     public Object day(String day, String filter) {
-        return transport.request("GET", "/stats/day/" + day + "/" + filter);
+        return transport.request("GET",
+                "/stats/day/" + Transport.encodeSegment(day) + "/" + Transport.encodeSegment(filter));
     }
 
     public Object day(String day) {
@@ -27,7 +28,8 @@ public final class StatsResource {
 
     /** @param month format {@code yyyy-mm} */
     public Object month(String month, String filter) {
-        return transport.request("GET", "/stats/month/" + month + "/" + filter);
+        return transport.request("GET",
+                "/stats/month/" + Transport.encodeSegment(month) + "/" + Transport.encodeSegment(filter));
     }
 
     public Object month(String month) {
@@ -36,7 +38,8 @@ public final class StatsResource {
 
     /** @param year format {@code yyyy} */
     public Object year(String year, String filter) {
-        return transport.request("GET", "/stats/year/" + year + "/" + filter);
+        return transport.request("GET",
+                "/stats/year/" + Transport.encodeSegment(year) + "/" + Transport.encodeSegment(filter));
     }
 
     public Object year(String year) {
