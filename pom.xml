@@ -138,7 +138,10 @@
           <plugin>
             <groupId>org.sonatype.central</groupId>
             <artifactId>central-publishing-maven-plugin</artifactId>
-            <version>0.7.0</version>
+            <!-- 0.11.0+: earlier 0.7.0 crashed on the Portal status response after a successful
+                 publish because its JSON model lacked the newer `warnings` field
+                 (UnrecognizedPropertyException). Keep this current with the Portal API. -->
+            <version>0.11.0</version>
             <extensions>true</extensions>
             <configuration>
               <publishingServerId>central</publishingServerId>
