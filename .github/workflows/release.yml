@@ -23,8 +23,24 @@ jobs:
           server-password: MAVEN_CENTRAL_TOKEN
           gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
+      # Safety gate: a Maven Central release is permanent and cannot be overwritten or deleted, so
+      # refuse to publish if the pushed tag (e.g. v10.2.1) does not match the pom.xml <version>, or
+      # if the version is a SNAPSHOT. This turns a mistyped tag into a fast, harmless build failure.
+      - name: Verify tag matches pom version
+        run: |
+          POM_VERSION=$(mvn -B -q help:evaluate -Dexpression=project.version -DforceStdout)
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          echo "tag=$GITHUB_REF_NAME  pom.version=$POM_VERSION"
+          if [ "$POM_VERSION" != "$TAG_VERSION" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME ($TAG_VERSION) does not match pom.xml version ($POM_VERSION)"
+            exit 1
+          fi
+          case "$POM_VERSION" in
+            *SNAPSHOT) echo "::error::Refusing to publish a SNAPSHOT ($POM_VERSION) to Maven Central"; exit 1 ;;
+          esac
       # Signs the artifacts and publishes via the central-publishing plugin (see the `release`
-      # profile in pom.xml). All credentials come from masked repository secrets — never committed.
+      # profile in pom.xml, autoPublish=true). All credentials come from masked repository secrets
+      # — never committed.
       - name: Deploy
         run: mvn -B -Prelease deploy
         env:
