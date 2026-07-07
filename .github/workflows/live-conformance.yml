@@ -2,8 +2,9 @@ name: live-conformance
 
 # Runs the live conformance suite against the real API2Convert API whenever a new
 # version is tagged (or on demand). The API key is an encrypted repository secret,
-# never exposed to fork pull requests. The conformance test is @Tag("live"), which
-# the pom excludes by default — clearing excludedGroups runs it.
+# never exposed to fork pull requests. The live scenarios are @Tag("live"), which the
+# pom excludes by default — selecting -Dgroups=live (and clearing excludedGroups) runs
+# every @Tag("live") class. Each is additionally @EnabledIfEnvironmentVariable on the key.
 on:
   push:
     tags: ['v*']
@@ -23,6 +24,6 @@ jobs:
           java-version: '17'
           cache: maven
       - name: Live conformance
-        run: mvn -B test -Dtest=ConversionConformanceTest -DexcludedGroups= -DfailIfNoTests=false
+        run: mvn -B test -Dgroups=live -DexcludedGroups= -DfailIfNoTests=false
         env:
           API2CONVERT_API_KEY: ${{ secrets.API2CONVERT_API_KEY }}
