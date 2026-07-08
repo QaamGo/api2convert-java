@@ -32,14 +32,14 @@ Maven:
 <dependency>
   <groupId>com.api2convert</groupId>
   <artifactId>api2convert-java</artifactId>
-  <version>10.2.0</version>
+  <version>10.2.1</version>
 </dependency>
 ```
 
 Gradle:
 
 ```kotlin
-implementation("com.api2convert:api2convert-java:10.2.0")
+implementation("com.api2convert:api2convert-java:10.2.1")
 ```
 
 Get an API key from the [API2Convert dashboard / documentation](https://www.api2convert.com/documentation).

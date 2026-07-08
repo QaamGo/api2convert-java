@@ -34,7 +34,7 @@ import java.util.regex.Pattern;
  */
 public final class Api2Convert implements AutoCloseable {
 
-    public static final String VERSION = "10.2.0";
+    public static final String VERSION = "10.2.1";
 
     private static final Pattern HTTP_URL = Pattern.compile("^https?://", Pattern.CASE_INSENSITIVE);
 
