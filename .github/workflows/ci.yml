@@ -27,3 +27,10 @@ jobs:
       # conformance test auto-skips unless API2CONVERT_API_KEY is set, so no key is needed here.
       - name: Build and test
         run: mvn -B verify
+      # examples/ is not a Maven source root, so `mvn verify` never compiles it. Compile-check the
+      # runnable examples against the just-built classes so a public-API rename can't silently break
+      # the copy-paste guides. Kept out of the reactor/release on purpose.
+      - name: Compile examples
+        run: |
+          mvn -B -q dependency:build-classpath -DincludeScope=compile -Dmdep.outputFile=target/examples-classpath.txt
+          javac -d target/examples-classes -cp "target/classes:$(cat target/examples-classpath.txt)" examples/*.java
