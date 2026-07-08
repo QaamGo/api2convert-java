@@ -250,20 +250,47 @@ API2CONVERT_API_KEY=... mvn verify -DexcludedGroups=
 ```
 
 The [live conformance suite](src/test/java/com/api2convert/ConversionConformanceTest.java) doubles
-as an executable, end-to-end tour of the SDK — each test is a self-contained usage example:
-
-1. **Convert a remote URL** — the one-call happy path.
-2. **Upload and convert a local file** — the multipart upload path.
-3. **Convert with options** — apply target-specific conversion options.
-4. **Discover the catalog** — list conversions and option schemas.
-5. **Drive the job lifecycle by hand** — create → add input → start → wait → inspect.
-6. **Handle a validation error** — an unknown target is a typed error.
-7. **Handle an authentication error** — a bad key is typed and never leaked.
+as an executable, end-to-end tour of the SDK: it runs the same 20 documented examples end to end
+(plus two negative scenarios — an invalid target is a typed validation error, and a bad key is a
+typed auth error that never leaks the credential). Each test mirrors one runnable file in
+[`examples/`](examples/) and one guide on api2convert.com.
 
 It runs automatically against the real API on every release tag (see
 [`.github/workflows/live-conformance.yml`](.github/workflows/live-conformance.yml)), so a published
-version is always verified end to end. Runnable single-purpose examples live in
-[`examples/`](examples/).
+version is always verified end to end.
+
+### Runnable examples
+
+Each file in [`examples/`](examples/) is a self-contained program that reads the key from
+`API2CONVERT_API_KEY` (and honors `API2CONVERT_BASE_URL`). Build the jar (`mvn -B package`), then run
+one with the SDK + Jackson on the classpath, e.g.:
+
+```bash
+API2CONVERT_API_KEY=your-key java -cp "target/classes:libs/*" Quickstart
+```
+
+| Guide | Example |
+|---|---|
+| Quick start | [`Quickstart.java`](examples/Quickstart.java) |
+| Convert files | [`ConvertFiles.java`](examples/ConvertFiles.java) |
+| Uploading files | [`UploadingFiles.java`](examples/UploadingFiles.java) |
+| The job lifecycle | [`JobLifecycle.java`](examples/JobLifecycle.java) |
+| Add a watermark | [`AddWatermark.java`](examples/AddWatermark.java) |
+| Create thumbnails | [`CreateThumbnails.java`](examples/CreateThumbnails.java) |
+| Compress files | [`CompressFiles.java`](examples/CompressFiles.java) |
+| Create archives | [`CreateArchives.java`](examples/CreateArchives.java) |
+| Create hashes | [`CreateHashes.java`](examples/CreateHashes.java) |
+| Extract assets | [`ExtractAssets.java`](examples/ExtractAssets.java) |
+| File analysis | [`FileAnalysis.java`](examples/FileAnalysis.java) |
+| Compare files | [`CompareFiles.java`](examples/CompareFiles.java) |
+| Capture a website | [`CaptureWebsite.java`](examples/CaptureWebsite.java) |
+| Audio operations | [`AudioOperations.java`](examples/AudioOperations.java) |
+| Image operations | [`ImageOperations.java`](examples/ImageOperations.java) |
+| Webhooks | [`Webhooks.java`](examples/Webhooks.java) |
+| Presets | [`Presets.java`](examples/Presets.java) |
+| Statistics | [`Statistics.java`](examples/Statistics.java) |
+| Rate limits & contracts | [`RateLimits.java`](examples/RateLimits.java) |
+| Authentication | [`Authentication.java`](examples/Authentication.java) |
 
 This SDK is hand-written and kept in sync with the API by an AI agent — see [`AGENTS.md`](AGENTS.md)
 and [`docs/SDK_CONTRACT.md`](docs/SDK_CONTRACT.md). Notable changes are recorded in
