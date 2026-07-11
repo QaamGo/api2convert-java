@@ -6,7 +6,9 @@ import com.api2convert.http.Transport;
  * API usage statistics. The response shape is free-form, so these return the decoded body as-is
  * (a {@code Map} or {@code List}).
  *
- * <p>{@code filter} is either an API key to scope to, or {@code all}.
+ * <p>{@code filter} is {@code single} (only the calling API key) or {@code all} (every key on the
+ * account, the default). The request is scoped by the {@code X-Oc-Api-Key} header, so never pass a
+ * key as {@code filter}.
  */
 public final class StatsResource {
 
