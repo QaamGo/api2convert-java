@@ -165,6 +165,15 @@ public final class Transport {
     public Object interpret(Response response) {
         ensureSuccessful(response);
 
+        // Every API request rides the no-follow path (secrets travel in X-Oc-* headers), so a 3xx
+        // passes ensureSuccessful (status < 400) but was deliberately not followed; decoding its body
+        // would yield an empty model. Surface it as a typed error instead (mirrors the download guard).
+        int status = response.status();
+        if (status >= 300 && status < 400) {
+            throw new NetworkException(
+                    "API2Convert returned an unexpected redirect (HTTP " + status + "); the request was not followed.");
+        }
+
         byte[] raw = readBody(response);
         if (raw.length == 0) {
             return Map.of();
