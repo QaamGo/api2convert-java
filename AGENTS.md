@@ -59,7 +59,7 @@ junior-friendly surface — one-call `convert()` — and use AI to keep it curre
   release.
 - **The contract is law.** Public method names, signatures and semantics match `docs/SDK_CONTRACT.md`
   across every SDK language. Adapt only to Java idiom (see divergences below).
-- **Upload uses the per-job `X-Oc-Token`, never the account key.** There is a test for this.
+- **Upload uses the per-job `X-Api2convert-Token`, never the account key.** There is a test for this.
 - **Authenticated requests never follow redirects.** The key/token ride in custom headers that a
   redirect-following client would forward across hosts. Only the no-auth download path follows
   redirects. There is a test for this (`SecurityTest`).

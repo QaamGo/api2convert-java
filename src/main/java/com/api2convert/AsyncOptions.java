@@ -32,7 +32,7 @@ public final class AsyncOptions {
 
     /**
      * Protect the result with this password. The returned {@link com.api2convert.model.Job} is not a
-     * result wrapper, so a later download must supply the {@code X-Oc-Download-Password} header.
+     * result wrapper, so a later download must supply the {@code X-Api2convert-Download-Password} header.
      */
     public AsyncOptions downloadPassword(String downloadPassword) {
         this.downloadPassword = downloadPassword;

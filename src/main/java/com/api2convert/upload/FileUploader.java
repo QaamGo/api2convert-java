@@ -26,7 +26,7 @@ import java.util.function.Supplier;
  *
  * <p>This step is intentionally hand-written: it is NOT described by the OpenAPI spec. It posts a
  * {@code multipart/form-data} body (field {@code file}) to {@code {job.server}/upload-file/{job.id}}
- * and authenticates with the per-job {@code X-Oc-Token} header — <strong>never the account API
+ * and authenticates with the per-job {@code X-Api2convert-Token} header — <strong>never the account API
  * key</strong>. The body is streamed, so large files do not have to be read into memory.
  */
 public final class FileUploader {
@@ -67,7 +67,7 @@ public final class FileUploader {
         String url = server + "/upload-file/" + job.id();
 
         Map<String, String> headers = new LinkedHashMap<>();
-        headers.put("X-Oc-Token", job.token());
+        headers.put("X-Api2convert-Token", job.token());
         headers.put("Content-Type", "multipart/form-data; boundary=" + boundary);
 
         Request request = Request.streaming("POST", url, headers, streamFactory);

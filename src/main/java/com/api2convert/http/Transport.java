@@ -100,7 +100,7 @@ public final class Transport {
     public Object request(String method, String path, Map<String, Object> body,
                           Map<String, String> query, Map<String, String> headers) {
         Map<String, String> requestHeaders = new LinkedHashMap<>();
-        requestHeaders.put("X-Oc-Api-Key", apiKey);
+        requestHeaders.put("X-Api2convert-Api-Key", apiKey);
         requestHeaders.putAll(headers);
 
         byte[] bodyBytes = null;
@@ -173,7 +173,7 @@ public final class Transport {
     public Object interpret(Response response) {
         ensureSuccessful(response);
 
-        // Every API request rides the no-follow path (secrets travel in X-Oc-* headers), so a 3xx
+        // Every API request rides the no-follow path (secrets travel in X-Api2convert-* headers), so a 3xx
         // passes ensureSuccessful (status < 400) but was deliberately not followed; decoding its body
         // would yield an empty model. Surface it as a typed error instead (mirrors the download guard).
         int status = response.status();
@@ -244,15 +244,15 @@ public final class Transport {
      * Download from a (self-contained) URL and return the body stream. Used for output downloads.
      *
      * <p>Redirect-following is enabled ONLY when the request carries no secret. The account key/token
-     * never use this path, but a download password travels in the custom {@code X-Oc-Download-Password}
+     * never use this path, but a download password travels in the custom {@code X-Api2convert-Download-Password}
      * header, and the JDK client forwards custom headers across a cross-host redirect — so a request
-     * carrying any {@code X-Oc-*} header must not follow redirects (upholding the "a request carrying a
+     * carrying any {@code X-Api2convert-*} header must not follow redirects (upholding the "a request carrying a
      * secret never follows a redirect" guarantee). A plain, passwordless download URL may still redirect
      * (storage/CDN), and there is no secret on it to leak.
      */
     public InputStream download(String uri, Map<String, String> headers) {
         boolean carriesSecret = headers.keySet().stream()
-                .anyMatch(name -> name.regionMatches(true, 0, "X-Oc-", 0, 5));
+                .anyMatch(name -> name.regionMatches(true, 0, "X-Api2convert-", 0, 14));
         Request request = Request.of("GET", uri, new LinkedHashMap<>(headers), null, !carriesSecret);
         Response response = send(request);
         ensureSuccessful(response);

@@ -34,7 +34,7 @@ class ConvertTest extends A2CTestCase {
         Recorded create = requestAt(0);
         assertEquals("POST", create.method());
         assertTrue(create.uri().endsWith("/jobs"));
-        assertEquals("test-key", create.header("X-Oc-Api-Key"));
+        assertEquals("test-key", create.header("X-Api2convert-Api-Key"));
         assertFalse(create.followRedirects());
         Map<String, Object> body = create.bodyJson();
         assertEquals(Boolean.TRUE, body.get("process"));
@@ -87,8 +87,8 @@ class ConvertTest extends A2CTestCase {
         Recorded upload = requestAt(1);
         assertEquals("POST", upload.method());
         assertEquals("https://www2.api2convert.com/v2/upload-file/job-9", upload.uri());
-        assertEquals("tok-abc", upload.header("X-Oc-Token"));
-        assertEquals("", upload.header("X-Oc-Api-Key"));
+        assertEquals("tok-abc", upload.header("X-Api2convert-Token"));
+        assertEquals("", upload.header("X-Api2convert-Api-Key"));
         assertFalse(upload.followRedirects());
         assertTrue(upload.header("Content-Type").contains("multipart/form-data"));
         assertTrue(upload.bodyString().contains("name=\"file\""));
@@ -168,7 +168,7 @@ class ConvertTest extends A2CTestCase {
 
         assertEquals(List.of("hunter2"), requestAt(0).bodyJson().get("download_passwords"));
         assertEquals("SECRET", new String(result.contents(), StandardCharsets.UTF_8));
-        assertEquals("hunter2", requestAt(2).header("X-Oc-Download-Password"));
+        assertEquals("hunter2", requestAt(2).header("X-Api2convert-Download-Password"));
     }
 
     @Test
@@ -186,7 +186,7 @@ class ConvertTest extends A2CTestCase {
                 new ConvertOptions().downloadPassword("hunter2"));
         result.contents("override-pw");
 
-        assertEquals("override-pw", requestAt(2).header("X-Oc-Download-Password"));
+        assertEquals("override-pw", requestAt(2).header("X-Api2convert-Download-Password"));
     }
 
     @Test
@@ -197,7 +197,7 @@ class ConvertTest extends A2CTestCase {
         byte[] bytes = client().download(output, "hunter2").contents();
 
         assertEquals("BYTES", new String(bytes, StandardCharsets.UTF_8));
-        assertEquals("hunter2", requestAt(0).header("X-Oc-Download-Password"));
+        assertEquals("hunter2", requestAt(0).header("X-Api2convert-Download-Password"));
     }
 
     @Test
@@ -227,7 +227,7 @@ class ConvertTest extends A2CTestCase {
         result.contents();
 
         assertFalse(requestAt(0).bodyJson().containsKey("download_passwords"));
-        assertEquals("", requestAt(2).header("X-Oc-Download-Password"));
+        assertEquals("", requestAt(2).header("X-Api2convert-Download-Password"));
     }
 
     @Test

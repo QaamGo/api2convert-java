@@ -39,7 +39,7 @@ class SecurityTest extends A2CTestCase {
 
         assertFalse(e.getMessage().contains(secretKey), "the API key must never leak into an exception message");
         // ...but it WAS sent as the auth header, so the request was genuinely authenticated.
-        assertEquals(secretKey, requestAt(0).header("X-Oc-Api-Key"));
+        assertEquals(secretKey, requestAt(0).header("X-Api2convert-Api-Key"));
     }
 
     @Test
@@ -47,7 +47,7 @@ class SecurityTest extends A2CTestCase {
         AtomicInteger evilHits = new AtomicInteger();
         HttpServer evil = start(exchange -> {
             evilHits.incrementAndGet();
-            respond(exchange, 200, "grabbed:" + exchange.getRequestHeaders().getFirst("X-Oc-Api-Key"));
+            respond(exchange, 200, "grabbed:" + exchange.getRequestHeaders().getFirst("X-Api2convert-Api-Key"));
         });
         HttpServer api = start(exchange -> {
             // An API host (or a compromised intermediary) that 302s to another host must not cause
@@ -102,14 +102,14 @@ class SecurityTest extends A2CTestCase {
 
         client().jobs().upload(job, "hello".getBytes());
 
-        assertEquals("tok-abc", requestAt(0).header("X-Oc-Token"));
-        assertEquals("", requestAt(0).header("X-Oc-Api-Key"), "the account key must never reach the upload server");
+        assertEquals("tok-abc", requestAt(0).header("X-Api2convert-Token"));
+        assertEquals("", requestAt(0).header("X-Api2convert-Api-Key"), "the account key must never reach the upload server");
         assertFalse(requestAt(0).followRedirects(), "an authenticated request must not follow redirects");
     }
 
     @Test
     void downloadPasswordDoesNotLeakAcrossACrossHostRedirect() throws IOException {
-        // Regression: a password-protected download carries the secret X-Oc-Download-Password custom
+        // Regression: a password-protected download carries the secret X-Api2convert-Download-Password custom
         // header. If the (untrusted) storage URL 302s to another host and we followed it, the JDK
         // client would forward that header to the redirect target. A request carrying the secret must
         // therefore NOT follow redirects.
@@ -117,7 +117,7 @@ class SecurityTest extends A2CTestCase {
         StringBuilder leaked = new StringBuilder();
         HttpServer evil = start(exchange -> {
             evilHits.incrementAndGet();
-            String seen = exchange.getRequestHeaders().getFirst("X-Oc-Download-Password");
+            String seen = exchange.getRequestHeaders().getFirst("X-Api2convert-Download-Password");
             if (seen != null) {
                 leaked.append(seen);
             }
@@ -154,7 +154,7 @@ class SecurityTest extends A2CTestCase {
         client().download(OutputFile.of("o", "https://dl.example.com/x", "f.pdf"), "s3cret").contents();
 
         assertFalse(requestAt(0).followRedirects(), "a download carrying a password must not follow redirects");
-        assertEquals("s3cret", requestAt(0).header("X-Oc-Download-Password"));
+        assertEquals("s3cret", requestAt(0).header("X-Api2convert-Download-Password"));
     }
 
     @Test
@@ -163,7 +163,7 @@ class SecurityTest extends A2CTestCase {
         client().download(OutputFile.of("o", "https://dl.example.com/x", "f.pdf")).contents();
 
         assertTrue(requestAt(0).followRedirects(), "a no-auth download may follow storage redirects");
-        assertEquals("", requestAt(0).header("X-Oc-Download-Password"));
+        assertEquals("", requestAt(0).header("X-Api2convert-Download-Password"));
     }
 
     @Test

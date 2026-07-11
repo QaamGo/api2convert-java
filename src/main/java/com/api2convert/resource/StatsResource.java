@@ -7,7 +7,7 @@ import com.api2convert.http.Transport;
  * (a {@code Map} or {@code List}).
  *
  * <p>{@code filter} is {@code single} (only the calling API key) or {@code all} (every key on the
- * account, the default). The request is scoped by the {@code X-Oc-Api-Key} header, so never pass a
+ * account, the default). The request is scoped by the {@code X-Api2convert-Api-Key} header, so never pass a
  * key as {@code filter}.
  */
 public final class StatsResource {

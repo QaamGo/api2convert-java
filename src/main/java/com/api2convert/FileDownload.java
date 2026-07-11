@@ -167,7 +167,7 @@ public final class FileDownload {
 
     private Map<String, String> headers(String downloadPassword) {
         String password = downloadPassword != null ? downloadPassword : this.downloadPassword;
-        return password != null ? Map.of("X-Oc-Download-Password", password) : Map.of();
+        return password != null ? Map.of("X-Api2convert-Download-Password", password) : Map.of();
     }
 
     /** Best-effort removal of a partially-written target after a download failure. */
