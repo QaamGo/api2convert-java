@@ -35,25 +35,12 @@ public final class Data {
      * mirrors PHP {@code is_numeric()} by explicitly rejecting booleans (a boolean is not numeric).
      */
     public static Integer nullableInt(Object value) {
-        if (value instanceof Boolean) {
+        Long l = nullableLong(value);
+        if (l == null || l < Integer.MIN_VALUE || l > Integer.MAX_VALUE) {
+            // Out of int range: return null (absence) rather than a truncated/wrapped garbage value.
             return null;
         }
-        if (value instanceof Number n) {
-            return n.intValue();
-        }
-        if (value instanceof String s) {
-            String t = s.trim();
-            try {
-                return (int) Long.parseLong(t);
-            } catch (NumberFormatException ignored) {
-                try {
-                    return (int) Double.parseDouble(t);
-                } catch (NumberFormatException ignored2) {
-                    return null;
-                }
-            }
-        }
-        return null;
+        return l.intValue();
     }
 
     /**
@@ -64,7 +51,7 @@ public final class Data {
             return null;
         }
         if (value instanceof Number n) {
-            return n.longValue();
+            return numberToLong(n);
         }
         if (value instanceof String s) {
             String t = s.trim();
@@ -72,13 +59,43 @@ public final class Data {
                 return Long.parseLong(t);
             } catch (NumberFormatException ignored) {
                 try {
-                    return (long) Double.parseDouble(t);
+                    return doubleToLong(Double.parseDouble(t));
                 } catch (NumberFormatException ignored2) {
                     return null;
                 }
             }
         }
         return null;
+    }
+
+    /**
+     * Convert a decoded JSON number to a long, or null when it falls outside long range. Jackson
+     * decodes an oversized integer as a {@link java.math.BigInteger} (whose {@code longValue()} would
+     * silently wrap) and a floating-point value as a {@link Double} (whose narrowing saturates to
+     * {@code Long.MAX/MIN_VALUE}); both would hydrate a misleading value instead of signalling absence.
+     */
+    private static Long numberToLong(Number n) {
+        if (n instanceof Double || n instanceof Float) {
+            return doubleToLong(n.doubleValue());
+        }
+        if (n instanceof java.math.BigInteger bi) {
+            // bitLength() < 64 iff the value fits in a signed 64-bit long.
+            return bi.bitLength() < 64 ? bi.longValue() : null;
+        }
+        if (n instanceof java.math.BigDecimal bd) {
+            return doubleToLong(bd.doubleValue());
+        }
+        // Byte / Short / Integer / Long are always within long range.
+        return n.longValue();
+    }
+
+    private static Long doubleToLong(double d) {
+        // Long.MAX_VALUE (2^63-1) is not exactly representable as a double, so use 2^63 (0x1p63) as the
+        // exclusive upper bound; Long.MIN_VALUE (-2^63) is exact and allowed.
+        if (Double.isNaN(d) || d < Long.MIN_VALUE || d >= 0x1p63) {
+            return null;
+        }
+        return (long) d;
     }
 
     public static boolean bool(Object value, boolean defaultValue) {

@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.api2convert.exception.AuthenticationException;
 import com.api2convert.exception.NetworkException;
 import com.api2convert.http.Config;
+import com.api2convert.model.InputFile;
 import com.api2convert.model.Job;
 import com.api2convert.model.OutputFile;
 import com.sun.net.httpserver.HttpServer;
@@ -172,6 +173,32 @@ class SecurityTest extends A2CTestCase {
         OutputFile output = OutputFile.of("o", "https://example.com/a b c", "f.pdf");
 
         assertThrows(NetworkException.class, () -> client.download(output).contents());
+    }
+
+    @Test
+    void aSlowUploadIsNotCappedByThePerRequestTimeout() throws IOException {
+        // A streamed upload transmits its whole body before the response is received, so a per-request
+        // timeout would abort a large/slow upload. The server delays its response well past the (floored
+        // 1s) timeout, yet the upload must still succeed — a streamed transfer is bounded only by connect.
+        HttpServer server = start(exchange -> {
+            exchange.getRequestBody().readAllBytes();
+            try {
+                Thread.sleep(1500);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            respond(exchange, 200, "{\"id\":\"in-1\",\"type\":\"upload\"}");
+        });
+        try {
+            Api2Convert client = new Api2Convert("k", Config.builder().maxRetries(0).timeout(1).build());
+            Job job = Job.fromMap(parse("{\"id\":\"job-9\",\"token\":\"tok-abc\",\"server\":\"http://127.0.0.1:"
+                    + server.getAddress().getPort() + "\",\"status\":{\"code\":\"incomplete\"}}"));
+
+            InputFile input = client.jobs().upload(job, "hello world".getBytes(StandardCharsets.UTF_8));
+            assertEquals("in-1", input.id());
+        } finally {
+            server.stop(0);
+        }
     }
 
     private interface Handler {

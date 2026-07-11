@@ -65,8 +65,14 @@ public final class JdkHttpSender implements HttpSender {
         }
 
         HttpRequest.Builder builder = HttpRequest.newBuilder(uri)
-                .timeout(requestTimeout)
                 .method(request.method(), publisher);
+        if (request.streamBody() == null) {
+            // A streamed upload transmits its whole body before the response is received, so a
+            // per-request timeout would abort a large/slow upload. Bound only non-streaming requests by
+            // the request timeout; the connect phase is always bounded by connectTimeout, and a streamed
+            // download body is read lazily (after send() returns) so it already escapes this timeout.
+            builder.timeout(requestTimeout);
+        }
         for (Map.Entry<String, String> header : request.headers().entrySet()) {
             builder.header(header.getKey(), header.getValue());
         }

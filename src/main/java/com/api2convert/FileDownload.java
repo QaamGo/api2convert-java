@@ -1,6 +1,7 @@
 package com.api2convert;
 
 import com.api2convert.exception.Api2ConvertException;
+import com.api2convert.exception.NetworkException;
 import com.api2convert.http.Transport;
 import com.api2convert.model.OutputFile;
 import java.io.IOException;
@@ -8,6 +9,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Map;
 
 /**
@@ -57,22 +59,57 @@ public final class FileDownload {
             throw new Api2ConvertException("Could not create directory: " + dir + ": " + e.getMessage(), e);
         }
 
-        try (InputStream source = transport.download(output.uri(), headers(downloadPassword));
-             OutputStream out = Files.newOutputStream(target)) {
-            byte[] buffer = new byte[1 << 16];
-            int read;
-            while ((read = source.read(buffer)) != -1) {
-                out.write(buffer, 0, read);
-            }
+        // Stream to a sibling temp file and rename over the target only after a clean copy. This never
+        // truncates the target up front and never destroys a pre-existing complete file on a mid-stream
+        // failure — a download either fully replaces the target or leaves it untouched.
+        Path tempDir = dir != null ? dir : Path.of(".");
+        Path temp;
+        try {
+            temp = Files.createTempFile(tempDir, ".a2c-download-", ".part");
         } catch (IOException e) {
-            // A read/write failure mid-stream leaves a truncated file at the target. Callers that
-            // retry (or hand the path to another process) must never see a partial download that
-            // masquerades as complete, so remove it before surfacing the error.
-            deleteQuietly(target);
             throw new Api2ConvertException("Could not write file: " + target + ": " + e.getMessage(), e);
         }
 
+        boolean committed = false;
+        try {
+            try (InputStream source = transport.download(output.uri(), headers(downloadPassword));
+                 OutputStream out = Files.newOutputStream(temp)) {
+                copy(source, out);
+            }
+            Files.move(temp, target, StandardCopyOption.REPLACE_EXISTING);
+            committed = true;
+        } catch (IOException e) {
+            // A read-side (network) failure is a NetworkException thrown by copy(); reaching this catch
+            // means a write / flush / rename failure — a genuine filesystem error.
+            throw new Api2ConvertException("Could not write file: " + target + ": " + e.getMessage(), e);
+        } finally {
+            if (!committed) {
+                deleteQuietly(temp);
+            }
+        }
+
         return target.toString();
+    }
+
+    /**
+     * Copy the download body to {@code out}, attributing a mid-stream failure to the correct side: a
+     * read fault on the network response surfaces as a typed {@link NetworkException}, while a write
+     * fault propagates as {@link IOException} for the caller to label as a filesystem error.
+     */
+    private static void copy(InputStream source, OutputStream out) throws IOException {
+        byte[] buffer = new byte[1 << 16];
+        while (true) {
+            int read;
+            try {
+                read = source.read(buffer);
+            } catch (IOException e) {
+                throw new NetworkException("The download was interrupted: " + e.getMessage(), e);
+            }
+            if (read == -1) {
+                break;
+            }
+            out.write(buffer, 0, read);
+        }
     }
 
     public byte[] contents() {
@@ -88,7 +125,9 @@ public final class FileDownload {
         try (InputStream source = transport.download(output.uri(), headers(downloadPassword))) {
             return source.readAllBytes();
         } catch (IOException e) {
-            throw new Api2ConvertException("Could not read the download: " + e.getMessage(), e);
+            // Reading the response body is a network operation; a mid-stream failure is a transport
+            // error, so surface it as a typed NetworkException rather than the base type.
+            throw new NetworkException("The download was interrupted: " + e.getMessage(), e);
         }
     }
 

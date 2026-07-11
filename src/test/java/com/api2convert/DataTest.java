@@ -20,13 +20,25 @@ class DataTest {
         assertEquals(5, Data.nullableInt(5));
         assertEquals(5, Data.nullableInt("5"));
         assertEquals(5, Data.nullableInt(5.9));
+        // Out of int range -> null (absence), never a truncated/wrapped value.
+        assertNull(Data.nullableInt(5_000_000_000L));
     }
 
     @Test
     void nullableLongHandlesLargeValues() {
         assertEquals(5_000_000_000L, Data.nullableLong(5_000_000_000L));
         assertEquals(5_000_000_000L, Data.nullableLong("5000000000"));
+        assertEquals(Long.MAX_VALUE, Data.nullableLong(Long.MAX_VALUE));
         assertNull(Data.nullableLong(true));
+
+        // Out-of-long-range values hydrate to null, never a wrapped (BigInteger) or saturated (double)
+        // garbage value.
+        assertNull(Data.nullableLong(new java.math.BigInteger("10000000000000000000")));
+        assertNull(Data.nullableLong(1e19));
+        assertNull(Data.nullableLong(-1e19));
+        assertNull(Data.nullableLong("1e19"));
+        assertNull(Data.nullableLong(Double.NaN));
+        assertNull(Data.nullableLong(Double.POSITIVE_INFINITY));
     }
 
     @Test

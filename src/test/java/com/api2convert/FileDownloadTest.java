@@ -76,10 +76,35 @@ class FileDownloadTest extends A2CTestCase {
     }
 
     @Test
-    void midWriteFailureLeavesNoFileAtTarget() {
-        // A read failure part-way through streaming must not leave a truncated file masquerading as a
-        // complete download; the partial target is removed before the error propagates.
-        HttpSender failing = request -> new Response() {
+    void midStreamNetworkReadFailureIsTypedAndLeavesNoFile() {
+        // A read failure part-way through streaming is a network error — a typed NetworkException, not a
+        // filesystem "could not write" error — and must leave no partial file at the target.
+        Api2Convert client = new Api2Convert("k", Config.defaults(), failingReadSender(), seconds -> slept.add(seconds));
+        OutputFile output = OutputFile.of("o", "https://dl.example.com/x", "result.pdf");
+        Path target = dir.resolve("result.pdf");
+
+        assertThrows(NetworkException.class, () -> client.download(output).save(target.toString()));
+
+        assertFalse(Files.exists(target), "a failed download must leave no partial file at the target");
+    }
+
+    @Test
+    void failedDownloadPreservesAPreExistingFile() throws IOException {
+        // Temp-file + atomic rename means a mid-stream failure must not destroy a previously-complete
+        // file at the target path (streaming straight into the target used to truncate it up front).
+        Path target = dir.resolve("result.pdf");
+        Files.writeString(target, "PREEXISTING COMPLETE FILE");
+        Api2Convert client = new Api2Convert("k", Config.defaults(), failingReadSender(), seconds -> slept.add(seconds));
+        OutputFile output = OutputFile.of("o", "https://dl.example.com/x", "result.pdf");
+
+        assertThrows(NetworkException.class, () -> client.download(output).save(target.toString()));
+
+        assertEquals("PREEXISTING COMPLETE FILE", Files.readString(target));
+    }
+
+    /** A sender that serves one byte, then fails the read — a mid-stream network interruption. */
+    private static HttpSender failingReadSender() {
+        return request -> new Response() {
             private int served;
 
             @Override
@@ -112,12 +137,5 @@ class FileDownloadTest extends A2CTestCase {
                 };
             }
         };
-        Api2Convert client = new Api2Convert("k", Config.defaults(), failing, seconds -> slept.add(seconds));
-        OutputFile output = OutputFile.of("o", "https://dl.example.com/x", "result.pdf");
-        Path target = dir.resolve("result.pdf");
-
-        assertThrows(Api2ConvertException.class, () -> client.download(output).save(target.toString()));
-
-        assertFalse(Files.exists(target), "a mid-write failure must leave no partial file at the target");
     }
 }
