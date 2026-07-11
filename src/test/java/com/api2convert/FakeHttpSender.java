@@ -50,6 +50,15 @@ final class FakeHttpSender implements HttpSender {
         queue.add(exception);
     }
 
+    /**
+     * Queue a response whose body streams {@code length} bytes lazily, without ever materializing
+     * them into a single array. Used to prove the SDK caps a control-plane read: a body far larger
+     * than the cap must be rejected without buffering all of it.
+     */
+    void addLazyBody(int status, long length, Map<String, String> headers) {
+        queue.add(new Lazy(status, new LinkedHashMap<>(headers), length));
+    }
+
     @Override
     public Response send(Request request) throws IOException {
         byte[] body;
@@ -73,7 +82,7 @@ final class FakeHttpSender implements HttpSender {
         if (next instanceof IOException io) {
             throw io;
         }
-        return (Canned) next;
+        return (Response) next;
     }
 
     /** A queued response. */
@@ -96,6 +105,44 @@ final class FakeHttpSender implements HttpSender {
         @Override
         public InputStream body() {
             return new ByteArrayInputStream(bytes);
+        }
+    }
+
+    /**
+     * A queued response whose body is generated on the fly (a stream of {@code 'a'} bytes), so a
+     * test can hand the SDK an oversized body without allocating it up front — asserting the read is
+     * bounded rather than fully buffered.
+     */
+    private record Lazy(int statusCode, Map<String, String> headers, long length) implements Response {
+        @Override
+        public int status() {
+            return statusCode;
+        }
+
+        @Override
+        public String header(String name) {
+            for (Map.Entry<String, String> e : headers.entrySet()) {
+                if (e.getKey().equalsIgnoreCase(name)) {
+                    return e.getValue();
+                }
+            }
+            return "";
+        }
+
+        @Override
+        public InputStream body() {
+            return new InputStream() {
+                private long served;
+
+                @Override
+                public int read() {
+                    if (served >= length) {
+                        return -1;
+                    }
+                    served++;
+                    return 'a';
+                }
+            };
         }
     }
 

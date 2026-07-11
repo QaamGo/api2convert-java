@@ -39,6 +39,14 @@ public final class Transport {
     private static final double MAX_BACKOFF_SECONDS = 8.0;
 
     /**
+     * Upper bound on how much of a control-plane (API / error) response body the SDK buffers into
+     * memory, so a hostile or buggy server cannot force an unbounded read (OOM) on the JSON / error
+     * path. File downloads are streamed to disk and bounded separately by {@code FileDownload}, so
+     * this cap does not apply to them.
+     */
+    private static final int MAX_RESPONSE_BYTES = 16 * 1024 * 1024; // 16 MiB
+
+    /**
      * Upper bound for an honored {@code Retry-After}. A server (or misconfigured proxy) asking for
      * an absurd delay can't stall a worker for hours — we never sleep longer than this per retry.
      */
@@ -302,7 +310,14 @@ public final class Transport {
 
     private byte[] readBody(Response response) {
         try (InputStream in = response.body()) {
-            return in.readAllBytes();
+            // Read at most one byte past the cap: a body streamed by the JDK client (BodyHandlers
+            // .ofInputStream) is pulled lazily, so a bounded read never buffers the whole of a
+            // hostile/oversized body. A returned length beyond the cap means the body exceeds it.
+            byte[] raw = in.readNBytes(MAX_RESPONSE_BYTES + 1);
+            if (raw.length > MAX_RESPONSE_BYTES) {
+                throw new NetworkException("API response body exceeds 16 MiB");
+            }
+            return raw;
         } catch (IOException e) {
             throw new NetworkException("Could not read the API response body: " + e.getMessage(), e);
         }

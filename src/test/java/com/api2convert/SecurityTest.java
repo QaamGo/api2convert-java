@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 
@@ -199,6 +200,32 @@ class SecurityTest extends A2CTestCase {
         } finally {
             server.stop(0);
         }
+    }
+
+    private static final long OVER_CAP_BYTES = 16L * 1024 * 1024 + 1;
+
+    @Test
+    void oversizedSuccessBodyIsRejectedWithoutBufferingUnboundedly() {
+        // A 2xx whose body streams far past the 16 MiB cap must be rejected, not read into memory —
+        // the lazy body would OOM a naive readAllBytes(). readNBytes stops one byte past the cap.
+        http.addLazyBody(200, OVER_CAP_BYTES, Map.of("Content-Type", "application/json"));
+
+        NetworkException e = assertThrows(NetworkException.class,
+                () -> client(Config.builder().maxRetries(0).build()).jobs().get("job-x"));
+        assertTrue(e.getMessage().contains("exceeds 16 MiB"),
+                "an over-cap control-plane body must surface as a typed network error");
+    }
+
+    @Test
+    void oversizedErrorBodyIsRejectedWithoutBufferingUnboundedly() {
+        // The error path (ensureSuccessful) reads the body too, so a hostile server returning a huge
+        // 500 body must be bounded there as well.
+        http.addLazyBody(500, OVER_CAP_BYTES, Map.of("Content-Type", "application/json"));
+
+        NetworkException e = assertThrows(NetworkException.class,
+                () -> client(Config.builder().maxRetries(0).build()).jobs().get("job-x"));
+        assertTrue(e.getMessage().contains("exceeds 16 MiB"),
+                "an over-cap error body must surface as a typed network error");
     }
 
     private interface Handler {
