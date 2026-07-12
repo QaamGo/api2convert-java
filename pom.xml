@@ -6,7 +6,7 @@
 
   <groupId>com.api2convert</groupId>
   <artifactId>api2convert-java</artifactId>
-  <version>10.3.0</version>
+  <version>10.3.1</version>
   <packaging>jar</packaging>
 
   <name>API2Convert Java SDK</name>
