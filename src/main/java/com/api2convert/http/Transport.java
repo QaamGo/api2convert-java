@@ -213,7 +213,11 @@ public final class Transport {
             return;
         }
 
-        Map<String, Object> body = decodeSafe(readBody(response));
+        // Deep-redact the decoded error body before it is attached to the exception: a future
+        // server/proxy that echoed a submitted credential in a nested/dotted key must never surface
+        // it via getBody() or a stringified exception (belt-and-suspenders — the API only echoes
+        // field names today). The SDK also never derives error text from the request body.
+        Map<String, Object> body = redactBody(decodeSafe(readBody(response)));
         String apiMessage = body.get("message") instanceof String s ? s : null;
         String message = apiMessage != null ? apiMessage : "Request failed (HTTP " + status + ")";
         String requestId = emptyToNull(response.header("X-Request-Id"));
@@ -321,6 +325,12 @@ public final class Transport {
         } catch (IOException e) {
             throw new NetworkException("Could not read the API response body: " + e.getMessage(), e);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> redactBody(Map<String, Object> body) {
+        Object redacted = com.api2convert.support.Redaction.maskSensitive(body);
+        return redacted instanceof Map ? (Map<String, Object>) redacted : Map.of();
     }
 
     @SuppressWarnings("unchecked")

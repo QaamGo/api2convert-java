@@ -90,6 +90,14 @@ public final class JobsResource {
     }
 
     /**
+     * Attach a cloud-storage input built with {@link com.api2convert.model.CloudInput} — e.g.
+     * {@code addInput(id, CloudInput.amazonS3(bucket, file, accesskeyid, secretaccesskey))}.
+     */
+    public InputFile addInput(String jobId, com.api2convert.model.CloudInput input) {
+        return addInput(jobId, input.toDescriptor());
+    }
+
+    /**
      * Upload a local file (path {@code String}, {@code Path}, {@code byte[]} or {@code InputStream})
      * to the job's upload server.
      */

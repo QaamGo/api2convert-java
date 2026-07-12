@@ -6,8 +6,10 @@ import com.api2convert.http.HttpSender;
 import com.api2convert.http.JdkHttpSender;
 import com.api2convert.http.Sleeper;
 import com.api2convert.http.Transport;
+import com.api2convert.model.CloudInput;
 import com.api2convert.model.Job;
 import com.api2convert.model.OutputFile;
+import com.api2convert.model.OutputTarget;
 import com.api2convert.resource.ContractsResource;
 import com.api2convert.resource.ConversionsResource;
 import com.api2convert.resource.JobsResource;
@@ -111,8 +113,10 @@ public final class Api2Convert implements AutoCloseable {
      */
     public ConversionResult convert(Object input, String to, Map<String, Object> options, ConvertOptions opts) {
         ConvertOptions o = opts != null ? opts : new ConvertOptions();
-        Job job = startConversion(input, to, options, o.category, null, o.filename, o.downloadPassword);
+        Job job = startConversion(input, to, options, o.category, null, o.filename, o.downloadPassword, o.outputTargets);
         Job done = jobs.await(job.id(), o.timeout);
+        // With an output target the job delivers to cloud storage and produces no local output; the
+        // returned result must not be treated as an error and is not auto-downloaded (it is lazy).
         return new ConversionResult(done, transport, o.outputIndex != null ? o.outputIndex : 0, o.downloadPassword);
     }
 
@@ -130,7 +134,7 @@ public final class Api2Convert implements AutoCloseable {
      */
     public Job convertAsync(Object input, String to, Map<String, Object> options, AsyncOptions opts) {
         AsyncOptions o = opts != null ? opts : new AsyncOptions();
-        return startConversion(input, to, options, o.category, o.callback, o.filename, o.downloadPassword);
+        return startConversion(input, to, options, o.category, o.callback, o.filename, o.downloadPassword, o.outputTargets);
     }
 
     /** A {@link FileDownload} for an output file: {@code client.download(out).save("./out/")}. */
@@ -201,7 +205,8 @@ public final class Api2Convert implements AutoCloseable {
      * file/stream is staged, uploaded, then started.
      */
     private Job startConversion(Object input, String to, Map<String, Object> options,
-                                String category, String callback, String filename, String downloadPassword) {
+                                String category, String callback, String filename, String downloadPassword,
+                                List<OutputTarget> outputTargets) {
         Map<String, Object> conversion = new LinkedHashMap<>();
         conversion.put("target", to);
         if (category != null) {
@@ -209,6 +214,15 @@ public final class Api2Convert implements AutoCloseable {
         }
         if (options != null && !options.isEmpty()) {
             conversion.put("options", options);
+        }
+        // Cloud delivery targets ride the conversion's output_target — never merged into options, so
+        // an open-ended API option key can never collide with an SDK control.
+        if (outputTargets != null && !outputTargets.isEmpty()) {
+            List<Map<String, Object>> targets = new java.util.ArrayList<>(outputTargets.size());
+            for (OutputTarget target : outputTargets) {
+                targets.add(target.toDescriptor());
+            }
+            conversion.put("output_target", targets);
         }
 
         Map<String, Object> job = new LinkedHashMap<>();
@@ -219,6 +233,14 @@ public final class Api2Convert implements AutoCloseable {
         }
         if (downloadPassword != null) {
             job.put("download_passwords", List.of(downloadPassword));
+        }
+
+        // A cloud input, like a remote URL, is a single started job: the API fetches it — nothing is
+        // staged or uploaded.
+        if (input instanceof CloudInput cloud) {
+            job.put("process", true);
+            job.put("input", List.of(cloud.toDescriptor()));
+            return jobs.create(job);
         }
 
         if (input instanceof String source && HTTP_URL.matcher(source).find()) {

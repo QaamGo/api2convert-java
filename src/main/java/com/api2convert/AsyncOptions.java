@@ -11,6 +11,7 @@ public final class AsyncOptions {
     String category;
     String filename;
     String downloadPassword;
+    java.util.List<com.api2convert.model.OutputTarget> outputTargets;
 
     /** Webhook URL notified when the job's status changes (also sets {@code notify_status}). */
     public AsyncOptions callback(String callback) {
@@ -36,6 +37,21 @@ public final class AsyncOptions {
      */
     public AsyncOptions downloadPassword(String downloadPassword) {
         this.downloadPassword = downloadPassword;
+        return this;
+    }
+
+    /**
+     * Deliver the result to one or more cloud-storage targets. The targets attach to the
+     * conversion's {@code output_target} and are never merged into the conversion options map.
+     */
+    public AsyncOptions outputTargets(com.api2convert.model.OutputTarget... outputTargets) {
+        this.outputTargets = java.util.List.of(outputTargets);
+        return this;
+    }
+
+    /** List form of {@link #outputTargets(com.api2convert.model.OutputTarget...)}. */
+    public AsyncOptions outputTargets(java.util.List<com.api2convert.model.OutputTarget> outputTargets) {
+        this.outputTargets = outputTargets;
         return this;
     }
 }
