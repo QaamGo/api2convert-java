@@ -135,6 +135,39 @@ try {
 > sent — call `Api2Convert.webhooks().parse(payload)` (or pass an empty secret) to deserialize the
 > callback without verifying.
 
+## Cloud storage
+
+Read an input straight from your own S3, Azure Blob, FTP or Google Cloud Storage, and/or deliver the
+converted output back into a bucket. Use the per-provider `CloudInput` factory for inputs (its
+arguments are the provider's flat/lowercase keys, exactly as the API expects), and the generic
+`OutputTarget` for outputs:
+
+```java
+import com.api2convert.ConvertOptions;
+import com.api2convert.enums.CloudProvider;
+import com.api2convert.model.CloudInput;
+import com.api2convert.model.OutputTarget;
+import java.util.Map;
+
+// Input from S3: fetch the file from your bucket and save the result locally.
+CloudInput input = CloudInput.amazonS3("my-bucket", "invoices/invoice.docx",
+        "AKIA...", "s3-secret-access-key");
+
+client.convert(input, "pdf").save("invoice.pdf");
+
+// Output to S3: convert a local/URL input and deliver the result into a bucket.
+OutputTarget target = OutputTarget.of(CloudProvider.AMAZON_S3,
+        Map.of("bucket", "my-bucket", "file", "results/invoice.pdf"),
+        Map.of("accesskeyid", "AKIA...", "secretaccesskey", "s3-secret-access-key"));
+
+client.convert("invoice.docx", "pdf", null, new ConvertOptions().outputTargets(target));
+```
+
+`azure(...)`, `ftp(...)` and `googleCloud(...)` inputs work the same way. When an output target is
+set the conversion has no downloadable output — `convert()` returns the completed job (via
+`result.job()`) without downloading. Cloud `credentials` are redacted (`[REDACTED]`) in exceptions
+and object inspection, and the SDK never logs them.
+
 ## Error handling
 
 Every failure is an unchecked exception extending `com.api2convert.exception.Api2ConvertException`:
