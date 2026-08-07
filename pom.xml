@@ -46,9 +46,9 @@
     <maven.compiler.release>17</maven.compiler.release>
 
     <!-- Single runtime dependency: Jackson as a JSON codec (analog of httpx / Guzzle).
-         Stay on a patched 2.18.x: 2.18.9 clears the databind polymorphic-typing and
-         jackson-core async-parser advisories. An exact pin here can drag a consumer's
-         Jackson down under Maven's nearest-wins resolution, so keep it current. -->
+         An exact pin here can drag a consumer's Jackson *down* under Maven's nearest-wins
+         resolution, so keep it current: 2.18.2 carried nine advisories across databind and
+         jackson-core. Dependabot groups the Jackson artifacts so they move in lock-step. -->
     <jackson.version>2.22.1</jackson.version>
     <junit.version>6.1.2</junit.version>
 
