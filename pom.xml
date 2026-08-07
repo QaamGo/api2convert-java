@@ -49,7 +49,7 @@
          Stay on a patched 2.18.x: 2.18.9 clears the databind polymorphic-typing and
          jackson-core async-parser advisories. An exact pin here can drag a consumer's
          Jackson down under Maven's nearest-wins resolution, so keep it current. -->
-    <jackson.version>2.18.9</jackson.version>
+    <jackson.version>2.22.1</jackson.version>
     <junit.version>5.11.4</junit.version>
 
     <!-- Test selection. `mvn verify` excludes the live group; the live conformance test
