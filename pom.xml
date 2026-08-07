@@ -50,7 +50,7 @@
          jackson-core async-parser advisories. An exact pin here can drag a consumer's
          Jackson down under Maven's nearest-wins resolution, so keep it current. -->
     <jackson.version>2.22.1</jackson.version>
-    <junit.version>5.11.4</junit.version>
+    <junit.version>6.1.2</junit.version>
 
     <!-- Test selection. `mvn verify` excludes the live group; the live conformance test
          additionally auto-skips unless API2CONVERT_API_KEY is set. To run it, export the
