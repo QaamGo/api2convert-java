@@ -1,0 +1,23 @@
+version: 2
+updates:
+  # Maven dependencies. Jackson is the single runtime dependency and is pinned to an
+  # exact version, so security alerts alone are not enough to keep it current — version
+  # updates are what actually surface a patched 2.18.x here.
+  - package-ecosystem: maven
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    groups:
+      # Jackson releases databind/core/annotations in lockstep; one PR per train.
+      jackson:
+        patterns:
+          - "com.fasterxml.jackson*:*"
+
+  # GitHub Actions used by CI and the release pipeline. Keeps the pinned action
+  # versions current (and, once SHA-pinned, updates the SHA + version comment).
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10

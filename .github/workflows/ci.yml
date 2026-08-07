@@ -34,3 +34,20 @@ jobs:
         run: |
           mvn -B -q dependency:build-classpath -DincludeScope=compile -Dmdep.outputFile=target/examples-classpath.txt
           javac -d target/examples-classes -cp "target/classes:$(cat target/examples-classpath.txt)" examples/*.java
+
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Jackson is pinned to an exact version here, and a pinned runtime dependency is the
+      # one thing GitHub's alerting has historically missed on this repo — so the gate lives
+      # in CI rather than relying on Dependabot noticing. osv-scanner resolves the pom's
+      # transitives (jackson-core, jackson-annotations) and exits non-zero on any advisory.
+      - name: Install osv-scanner
+        run: |
+          curl -sSfL -o /usr/local/bin/osv-scanner \
+            https://github.com/google/osv-scanner/releases/download/v2.5.0/osv-scanner_linux_amd64
+          chmod +x /usr/local/bin/osv-scanner
+      - name: Audit (pom.xml, incl. transitive Maven dependencies)
+        run: osv-scanner scan source -r ./

@@ -6,7 +6,7 @@
 
   <groupId>com.api2convert</groupId>
   <artifactId>api2convert-java</artifactId>
-  <version>10.3.1</version>
+  <version>10.3.2</version>
   <packaging>jar</packaging>
 
   <name>API2Convert Java SDK</name>
@@ -45,8 +45,11 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.release>17</maven.compiler.release>
 
-    <!-- Single runtime dependency: Jackson as a JSON codec (analog of httpx / Guzzle). -->
-    <jackson.version>2.18.2</jackson.version>
+    <!-- Single runtime dependency: Jackson as a JSON codec (analog of httpx / Guzzle).
+         Stay on a patched 2.18.x: 2.18.9 clears the databind polymorphic-typing and
+         jackson-core async-parser advisories. An exact pin here can drag a consumer's
+         Jackson down under Maven's nearest-wins resolution, so keep it current. -->
+    <jackson.version>2.18.9</jackson.version>
     <junit.version>5.11.4</junit.version>
 
     <!-- Test selection. `mvn verify` excludes the live group; the live conformance test

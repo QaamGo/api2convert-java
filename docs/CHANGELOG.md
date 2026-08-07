@@ -3,6 +3,21 @@
 All notable changes to this package are documented here. This project adheres to
 [Semantic Versioning](https://semver.org/).
 
+## [10.3.2] - 2026-08-07
+
+Dependency security update. No API changes.
+
+- Bumped Jackson 2.18.2 → 2.18.9, clearing nine advisories across `jackson-databind` and
+  `jackson-core` (three HIGH: `GHSA-j3rv-43j4-c7qm`, `GHSA-rmj7-2vxq-3g9f`, `GHSA-r7wm-3cxj-wff9`).
+  None were reachable through this SDK — it uses a plain `ObjectMapper` with no default typing,
+  no `@JsonView`/`@JsonIgnore` and no async parser — but the exact pin could drag a consumer's
+  Jackson down under Maven's nearest-wins resolution.
+- Fixed `Api2Convert.VERSION`, which still read `10.2.1` and so reported a stale `User-Agent`
+  for the 10.3.0 and 10.3.1 releases. The release tag guard only compared the tag to `pom.xml`,
+  which is why the drift went unnoticed.
+- CI now runs an OSV dependency audit that fails the build on any advisory in the resolved Maven
+  tree, including transitives, and Dependabot version updates are enabled.
+
 ## [10.2.1] - 2026-07-08
 
 - Lock-step version bump to keep all API2Convert SDKs on 10.2.1. No library/runtime changes since
