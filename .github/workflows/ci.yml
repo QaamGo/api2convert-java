@@ -17,7 +17,7 @@ jobs:
       matrix:
         java: ['17', '21', '25']
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -39,7 +39,7 @@ jobs:
     name: Dependency audit
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       # Jackson is pinned to an exact version here, and a pinned runtime dependency is the
       # one thing GitHub's alerting has historically missed on this repo — so the gate lives
       # in CI rather than relying on Dependabot noticing. osv-scanner resolves the pom's
