@@ -49,7 +49,7 @@
          An exact pin here can drag a consumer's Jackson *down* under Maven's nearest-wins
          resolution, so keep it current: 2.18.2 carried nine advisories across databind and
          jackson-core. Dependabot groups the Jackson artifacts so they move in lock-step. -->
-    <jackson.version>2.22.1</jackson.version>
+    <jackson.version>2.22.2</jackson.version>
     <junit.version>6.1.2</junit.version>
 
     <!-- Test selection. `mvn verify` excludes the live group; the live conformance test
