@@ -3,6 +3,18 @@
 All notable changes to this package are documented here. This project adheres to
 [Semantic Versioning](https://semver.org/).
 
+## [10.3.3] - 2026-09-11
+
+Dependency maintenance release. No API changes.
+
+- Bumped `jackson-databind` 2.22.1 → 2.22.2, the SDK's sole runtime dependency. A patch release
+  with no advisories outstanding against 2.22.1; kept current so the exact pin cannot drag a
+  consumer's Jackson down under Maven's nearest-wins resolution.
+- Test-scope only: JUnit 6.1.2 → 6.1.3, Maven compiler plugin 3.15.0 → 3.16.0 and surefire
+  3.5.6 → 3.6.0. No effect on the published artifact.
+- CI now runs the live-conformance suite on `main`, in line with the other six SDKs, and the
+  release workflow uses the `actions/setup-java` v6 input names.
+
 ## [10.3.2] - 2026-08-07
 
 Dependency security update. No API changes.
