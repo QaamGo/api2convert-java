@@ -9,14 +9,13 @@ package com.api2convert.enums;
  * {@code type} / {@code status} as raw strings — an unknown provider string from the server must
  * round-trip untyped and never throw, so this enum is deliberately not used when hydrating.
  *
- * <p>{@code AMAZON_S3}, {@code AZURE}, {@code FTP} and {@code GOOGLE_CLOUD} work as both input and
+ * <p>{@code AMAZON_S3}, {@code AZURE} and {@code GOOGLE_CLOUD} work as both input and
  * output; {@code GDRIVE} and {@code YOUTUBE} are output-only (they validate as an input source but
  * have no downloader).
  */
 public enum CloudProvider {
     AMAZON_S3("amazons3"),
     AZURE("azure"),
-    FTP("ftp"),
     GDRIVE("gdrive"),
     GOOGLE_CLOUD("googlecloud"),
     YOUTUBE("youtube");

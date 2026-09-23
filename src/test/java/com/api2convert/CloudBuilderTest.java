@@ -17,12 +17,13 @@ class CloudBuilderTest {
     void providerWireValues() {
         assertEquals("amazons3", CloudProvider.AMAZON_S3.wire());
         assertEquals("azure", CloudProvider.AZURE.wire());
-        assertEquals("ftp", CloudProvider.FTP.wire());
         assertEquals("gdrive", CloudProvider.GDRIVE.wire());
         assertEquals("googlecloud", CloudProvider.GOOGLE_CLOUD.wire());
         assertEquals("youtube", CloudProvider.YOUTUBE.wire());
-        assertEquals(CloudProvider.FTP, CloudProvider.fromWire("ftp"));
         assertNull(CloudProvider.fromWire("r2"), "an unknown provider resolves to null, never throws");
+        // `ftp` is retired vocabulary the API still returns on historical jobs; it must resolve to
+        // null like any other unknown provider rather than throwing.
+        assertNull(CloudProvider.fromWire("ftp"), "a retired provider resolves to null, never throws");
     }
 
     @Test
@@ -40,14 +41,6 @@ class CloudBuilderTest {
         assertEquals("azure", d.get("source"));
         assertEquals(Map.of("container", "cont", "file", "in.png"), d.get("parameters"));
         assertEquals(Map.of("accountname", "acc", "accountkey", "k"), d.get("credentials"));
-    }
-
-    @Test
-    void ftpFactoryEmitsFlatLowercaseKeys() {
-        Map<String, Object> d = CloudInput.ftp("h", "/f", "u", "p").toDescriptor();
-        assertEquals("ftp", d.get("source"));
-        assertEquals(Map.of("host", "h", "file", "/f"), d.get("parameters"));
-        assertEquals(Map.of("username", "u", "password", "p"), d.get("credentials"));
     }
 
     @Test
@@ -69,11 +62,11 @@ class CloudBuilderTest {
 
     @Test
     void outputTargetDescriptorOmitsStatus() {
-        OutputTarget target = new OutputTarget("ftp", Map.of("host", "h"), Map.of("password", "p"), "uploading");
+        OutputTarget target = new OutputTarget("azure", Map.of("container", "c"), Map.of("accountkey", "k"), "uploading");
         Map<String, Object> d = target.toDescriptor();
-        assertEquals("ftp", d.get("type"));
-        assertEquals(Map.of("host", "h"), d.get("parameters"));
-        assertEquals(Map.of("password", "p"), d.get("credentials"));
+        assertEquals("azure", d.get("type"));
+        assertEquals(Map.of("container", "c"), d.get("parameters"));
+        assertEquals(Map.of("accountkey", "k"), d.get("credentials"));
         assertFalse(d.containsKey("status"), "status is read-only and never serialized");
     }
 }

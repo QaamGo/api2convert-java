@@ -30,8 +30,8 @@ class CloudConnectorTest extends A2CTestCase {
         http.addJson(200, "{\"id\":\"job-1\",\"status\":{\"code\":\"completed\"}}");
 
         CloudInput input = CloudInput.amazonS3("my-bucket", "in/photo.png", "AKIA_TEST", "SECRET_TEST");
-        OutputTarget target = OutputTarget.of("ftp",
-                orderedParams(), orderedFtpCreds());
+        OutputTarget target = OutputTarget.of("azure",
+                orderedParams(), orderedAzureCreds());
 
         // Output target attached via the convert() outputTargets control (never the options map).
         client().convert(input, "jpg", null, new ConvertOptions().outputTargets(target));
@@ -44,7 +44,7 @@ class CloudConnectorTest extends A2CTestCase {
         http.addJson(201, "{\"id\":\"job-1\",\"status\":{\"code\":\"incomplete\"}}");
 
         CloudInput input = CloudInput.amazonS3("my-bucket", "in/photo.png", "AKIA_TEST", "SECRET_TEST");
-        OutputTarget target = OutputTarget.of("ftp", orderedParams(), orderedFtpCreds());
+        OutputTarget target = OutputTarget.of("azure", orderedParams(), orderedAzureCreds());
 
         Map<String, Object> conversion = new LinkedHashMap<>();
         conversion.put("target", "jpg");
@@ -76,23 +76,23 @@ class CloudConnectorTest extends A2CTestCase {
         // 3) conversion[0].output_target[0] = {type, parameters, credentials} and NO status key.
         Map<String, Object> conv0 = (Map<String, Object>) ((List<?>) body.get("conversion")).get(0);
         Map<String, Object> ot0 = (Map<String, Object>) ((List<?>) conv0.get("output_target")).get(0);
-        assertEquals("ftp", ot0.get("type"));
-        assertEquals(Map.of("host", "ftp.example.com", "file", "/out/photo.jpg"), ot0.get("parameters"));
-        assertEquals(Map.of("username", "u", "password", "p"), ot0.get("credentials"));
+        assertEquals("azure", ot0.get("type"));
+        assertEquals(Map.of("container", "out-container", "file", "/out/photo.jpg"), ot0.get("parameters"));
+        assertEquals(Map.of("accountname", "n", "accountkey", "k"), ot0.get("credentials"));
         assertFalse(ot0.containsKey("status"), "status is read-only and must never be serialized on create");
     }
 
     private static Map<String, Object> orderedParams() {
         Map<String, Object> params = new LinkedHashMap<>();
-        params.put("host", "ftp.example.com");
+        params.put("container", "out-container");
         params.put("file", "/out/photo.jpg");
         return params;
     }
 
-    private static Map<String, Object> orderedFtpCreds() {
+    private static Map<String, Object> orderedAzureCreds() {
         Map<String, Object> creds = new LinkedHashMap<>();
-        creds.put("username", "u");
-        creds.put("password", "p");
+        creds.put("accountname", "n");
+        creds.put("accountkey", "k");
         return creds;
     }
 
@@ -112,8 +112,8 @@ class CloudConnectorTest extends A2CTestCase {
                   "conversion": [
                     { "id": "c-1", "target": "jpg",
                       "output_target": [
-                        { "type": "ftp",
-                          "parameters": { "host": "ftp.example.com", "file": "/out/photo.jpg" },
+                        { "type": "azure",
+                          "parameters": { "container": "out-container", "file": "/out/photo.jpg" },
                           "credentials": {}, "status": "uploading" }
                       ] }
                   ]
@@ -127,9 +127,9 @@ class CloudConnectorTest extends A2CTestCase {
 
         // 2) output target type/status/parameters surface.
         OutputTarget ot0 = job.conversion().get(0).outputTargets().get(0);
-        assertEquals("ftp", ot0.type());
+        assertEquals("azure", ot0.type());
         assertEquals("uploading", ot0.status());
-        assertEquals(Map.of("host", "ftp.example.com", "file", "/out/photo.jpg"), ot0.parameters());
+        assertEquals(Map.of("container", "out-container", "file", "/out/photo.jpg"), ot0.parameters());
 
         // 3) credentials are NOT surfaced (empty), matching the server strip.
         assertTrue(ot0.credentials().isEmpty(), "output-target credentials must not be hydrated");

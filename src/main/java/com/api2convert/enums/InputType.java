@@ -19,7 +19,7 @@ public enum InputType {
     GDRIVE_PICKER("gdrive_picker"),
     /** A small file embedded inline as base64. */
     BASE64("base64"),
-    /** A file imported from cloud storage (S3, GCS, Azure, FTP, ...). */
+    /** A file imported from cloud storage (S3, GCS, Azure, ...). */
     CLOUD("cloud");
 
     private final String wire;

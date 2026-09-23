@@ -36,14 +36,14 @@ class CloudRedactionTest extends A2CTestCase {
 
     @Test
     void outputTargetToStringMasksCredentials() {
-        OutputTarget target = OutputTarget.of("ftp",
-                Map.of("host", "ftp.example.com"), Map.of("password", SECRET));
+        OutputTarget target = OutputTarget.of("azure",
+                Map.of("container", "out-container"), Map.of("accountkey", SECRET));
 
         String rendered = target.toString();
 
         assertFalse(rendered.contains(SECRET));
         assertTrue(rendered.contains("[REDACTED]"));
-        assertTrue(rendered.contains("host=ftp.example.com"));
+        assertTrue(rendered.contains("container=out-container"));
     }
 
     // --- 3b — error text on the create path -----------------------------------------------------
@@ -97,14 +97,14 @@ class CloudRedactionTest extends A2CTestCase {
         assertTrue(rendered.contains("[REDACTED]"));
         // Non-secret parameter keys render normally.
         assertTrue(rendered.contains("bucket=my-bucket"));
-        assertTrue(rendered.contains("host=ftp.example.com"));
+        assertTrue(rendered.contains("container=out-container"));
     }
 
     private static Map<String, Object> orderedParams() {
         java.util.Map<String, Object> params = new java.util.LinkedHashMap<>();
         params.put("token", "PARAMSECRET");
         params.put("bucket", "my-bucket");
-        params.put("host", "ftp.example.com");
+        params.put("container", "out-container");
         return params;
     }
 }

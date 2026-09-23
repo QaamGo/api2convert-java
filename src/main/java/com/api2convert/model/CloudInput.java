@@ -7,7 +7,7 @@ import java.util.Map;
 
 /**
  * A cloud-storage input descriptor — imports a file the API fetches from customer-owned storage
- * (S3, Azure Blob, FTP, Google Cloud Storage). Attach it via {@code client.convert(cloudInput, ...)}
+ * (S3, Azure Blob, Google Cloud Storage). Attach it via {@code client.convert(cloudInput, ...)}
  * or {@code client.jobs().addInput(jobId, cloudInput)}; it serializes to
  * {@code {type:"cloud", source:<provider>, parameters:{…}, credentials:{…}}}.
  *
@@ -41,13 +41,6 @@ public record CloudInput(String source, Map<String, Object> parameters, Map<Stri
         return new CloudInput(CloudProvider.AZURE.wire(),
                 ordered("container", container, "file", file),
                 ordered("accountname", accountname, "accountkey", accountkey));
-    }
-
-    /** FTP — {@code parameters:{host,file}}, {@code credentials:{username,password}}. */
-    public static CloudInput ftp(String host, String file, String username, String password) {
-        return new CloudInput(CloudProvider.FTP.wire(),
-                ordered("host", host, "file", file),
-                ordered("username", username, "password", password));
     }
 
     /** Google Cloud Storage — {@code parameters:{projectid,bucket,file}}, {@code credentials:{keyfile}}. */
