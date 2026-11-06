@@ -3,6 +3,18 @@
 All notable changes to this package are documented here. This project adheres to
 [Semantic Versioning](https://semver.org/).
 
+## [10.3.4] - 2026-11-06
+
+Security update, and FTP is no longer part of the SDK.
+
+- Bumped Jackson 2.22.2 → 2.22.3, clearing four high advisories: GHSA-cxp5-3px4-pw24 and
+  GHSA-wv8q-qhhj-9h54 in `jackson-databind`, GHSA-7hhh-6rmp-j9qf and GHSA-p6pp-m3f8-5c89 in
+  `jackson-core`. The SDK's own parsing does not use the features they affect, but the exact pin
+  would otherwise keep them in a consumer's dependency tree.
+- Removed `CloudInput.ftp()` and the `ftp` cloud provider, because FTP is being retired from the
+  API. Code that uses them no longer compiles and needs another provider. Reading jobs stays
+  tolerant: jobs created with `ftp` earlier still load.
+
 ## [10.3.3] - 2026-09-11
 
 Dependency maintenance release. No API changes.

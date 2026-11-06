@@ -6,7 +6,7 @@
 
   <groupId>com.api2convert</groupId>
   <artifactId>api2convert-java</artifactId>
-  <version>10.3.3</version>
+  <version>10.3.4</version>
   <packaging>jar</packaging>
 
   <name>API2Convert Java SDK</name>
@@ -49,7 +49,7 @@
          An exact pin here can drag a consumer's Jackson *down* under Maven's nearest-wins
          resolution, so keep it current: 2.18.2 carried nine advisories across databind and
          jackson-core. Dependabot groups the Jackson artifacts so they move in lock-step. -->
-    <jackson.version>2.22.2</jackson.version>
+    <jackson.version>2.22.3</jackson.version>
     <junit.version>6.1.3</junit.version>
 
     <!-- Test selection. `mvn verify` excludes the live group; the live conformance test
